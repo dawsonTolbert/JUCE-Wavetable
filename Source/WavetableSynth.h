@@ -80,23 +80,23 @@ private:
 class WavetableOscillator
 {
 public:
-    WavetableOscillator(const juce::AudioSampleBuffer& wavetableToUse) : wavetable(wavetableToUse) 
+    WavetableOscillator(const juce::AudioSampleBuffer& wavetableToUse) : 
+        wavetable(wavetableToUse),
+        tableSize(wavetable.getNumSamples() - 1)
     {
         jassert(wavetable.getNumChannels() == 1);
     }
 
     void setFrequency(float frequency, float sampleRate)
     {
-        auto tableSizeOverSampleRate = (float)wavetable.getNumSamples() / sampleRate;
+        auto tableSizeOverSampleRate = (float)tableSize / sampleRate;
         tableDelta = frequency * tableSizeOverSampleRate;
     }
 
     forcedinline float getNextSample() noexcept
     {
-        auto tableSize = (unsigned int)wavetable.getNumSamples();
-
         auto index0 = (unsigned int)currentIndex;
-        auto index1 = index0 == (tableSize - 1) ? (unsigned int)0 : index0 + 1;
+        auto index1 = index0 + 1;
 
         auto frac = currentIndex - (float)index0;
 
@@ -114,6 +114,7 @@ public:
     }
 private:
     const juce::AudioSampleBuffer& wavetable;
+    const int tableSize;
     float currentIndex = 0.0f, tableDelta = 0.0f;
 };
 
@@ -155,7 +156,7 @@ public:
 
     void createWavetable()
     {
-        sineTable.setSize(1, (int)tableSize);
+        sineTable.setSize(1, (int)tableSize + 1);
         auto* samples = sineTable.getWritePointer(0);
 
         auto angleDelta = juce::MathConstants<double>::twoPi / (double)(tableSize - 1);
@@ -166,6 +167,8 @@ public:
             samples[i] = (float)sample;
             currentAngle += angleDelta;
         }
+
+        samples[tableSize] = samples[0];
     }
 
     void prepareToPlay (int, double sampleRate) override
