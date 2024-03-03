@@ -119,7 +119,28 @@ public:
         {
             auto* oscillator = new SineOscillator();                                    // [2]
 
+
+            //make list of possible note values in major chord
+            auto majorScale = {48.0, 50.0, 52.0, 53.0, 55.0, 57.0, 59.0, 
+                60.0, 62.0, 64.0, 65.0, 67.0, 69.0, 71.0, 
+                72.0, 74.0, 76.0, 77.0, 79.0, 81.0, 83.0, 
+                84.0};
+            //take random midiNote value
             auto midiNote = juce::Random::getSystemRandom().nextDouble() * 36.0 + 48.0; // [3]
+
+            //find closest majorScale value and assign value to midiNote
+            auto nearest = majorScale.begin();
+            double minDiff = std::abs(*nearest - midiNote);
+            for (auto i = majorScale.begin() + 1; i != majorScale.end(); ++i) {
+                double diff = std::abs(*i - midiNote);
+                if (diff < minDiff) {
+                    nearest = i;
+                    minDiff = diff;
+                }
+            }
+
+            midiNote = *nearest;
+
             auto frequency = 440.0 * pow (2.0, (midiNote - 69.0) / 12.0);               // [4]
 
             oscillator->setFrequency ((float) frequency, (float) sampleRate);           // [5]
