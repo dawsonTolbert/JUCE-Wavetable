@@ -157,15 +157,24 @@ public:
     void createWavetable()
     {
         sineTable.setSize(1, (int)tableSize + 1);
+        sineTable.clear();
+
         auto* samples = sineTable.getWritePointer(0);
 
-        auto angleDelta = juce::MathConstants<double>::twoPi / (double)(tableSize - 1);
-        auto currentAngle = 0.0;
+        int harmonics[] = { 1, 3, 5, 6, 7, 9, 13, 15 };
+        float harmonicWeights[] = { 0.5f, 0.1f, 0.05f, 0.125f, 0.09f, 0.005f, 0.002f, 0.001f };
 
-        for (unsigned int i = 0; i < tableSize; ++i) {
-            auto sample = std::sin(currentAngle);
-            samples[i] = (float)sample;
-            currentAngle += angleDelta;
+        jassert(juce::numElementsInArray(harmonics) == juce::numElementsInArray(harmonicWeights));
+
+        for (auto harmonic = 0; harmonic < juce::numElementsInArray(harmonics); ++harmonic) {
+            auto angleDelta = juce::MathConstants<double>::twoPi / (double)(tableSize - 1) * harmonics[harmonic];
+            auto currentAngle = 0.0;
+
+            for (unsigned int i = 0; i < tableSize; ++i) {
+                auto sample = std::sin(currentAngle);
+                samples[i] += (float)sample * harmonicWeights[harmonic];
+                currentAngle += angleDelta;
+            }
         }
 
         samples[tableSize] = samples[0];
@@ -173,7 +182,7 @@ public:
 
     void prepareToPlay (int, double sampleRate) override
     {
-        auto numberOfOscillators = 200;                                                 // [1]
+        auto numberOfOscillators = 10;                                                 // [1]
 
         for (auto i = 0; i < numberOfOscillators; ++i)
         {
